@@ -21,6 +21,8 @@ from scripts.collect_papers import (
     find_conference_abstract_by_title,
     is_relevant_enough,
     has_meaningful_summary,
+    journal_highlight_source_names,
+    make_journal_highlight_paper,
     is_retryable_dblp_error,
     is_retryable_arxiv_error,
     merge_with_retained_papers,
@@ -218,6 +220,24 @@ class RetentionTest(unittest.TestCase):
         self.assertEqual(headers["X-API-Key"], "secret")
         self.assertEqual(headers["Authorization"], "Bearer token")
 
+    def test_journal_highlight_sources_and_copy(self) -> None:
+        names = journal_highlight_source_names({"journal_highlight_sources": ["Physical Review Letters"]})
+        highlighted = make_journal_highlight_paper(
+            {
+                "id": "feed:prl:example",
+                "source": "Physical Review Letters",
+                "title": "A cold atom result",
+                "published": "2026-01-02T00:00:00+00:00",
+            },
+            dt.datetime(2026, 1, 3, tzinfo=dt.timezone.utc),
+        )
+
+        self.assertEqual(names, {"physical review letters"})
+        self.assertEqual(highlighted["source_type"], "conference")
+        self.assertEqual(highlighted["conference"]["id"], "physical-review-letters")
+        self.assertEqual(highlighted["conference"]["year"], 2026)
+        self.assertTrue(highlighted["id"].startswith("journal-highlight:"))
+
     def test_openalex_abstract_text_reconstructs_inverted_index(self) -> None:
         abstract = openalex_abstract_text({"abstract_inverted_index": {"hello": [0], "world": [1]}})
 
@@ -260,6 +280,19 @@ class RetentionTest(unittest.TestCase):
         self.assertIn('all:"LLM inference"', query)
         self.assertNotIn("cat:cs.CL", query)
         self.assertNotIn(" AND ", query)
+
+    def test_arxiv_query_uses_category_when_topic_has_no_keywords(self) -> None:
+        topic = Topic(
+            id="quant_gas_recent",
+            name="cond-mat.quant-gas recent",
+            description="",
+            keywords=[],
+            arxiv_categories=["cond-mat.quant-gas"],
+        )
+
+        query = arxiv_query_for_topic(topic)
+
+        self.assertEqual(query, "(cat:cond-mat.quant-gas)")
 
     def test_arxiv_query_can_use_broad_mode(self) -> None:
         os.environ["ARXIV_QUERY_MODE"] = "broad"

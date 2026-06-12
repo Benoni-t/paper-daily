@@ -63,10 +63,29 @@ assignees: ''
       "url": "https://feeds.aps.org/rss/recent/rmp.xml"
     }
   ],
+  "journal_highlight_sources": [
+    "Nature News",
+    "Nature Physics",
+    "Physical Review Letters",
+    "Physical Review X",
+    "PRX Quantum",
+    "Physical Review A",
+    "Physical Review B",
+    "Physical Review Applied",
+    "Physical Review Research",
+    "Reviews of Modern Physics"
+  ],
   "conference_sources": {
     "enabled": false
   },
   "topics": [
+    {
+      "id": "cond_mat_quant_gas_recent",
+      "name": "cond-mat.quant-gas 每日更新",
+      "description": "完整跟踪 arXiv cond-mat.quant-gas recent 列表中的每日更新，作为量子气体和冷原子论文的兜底分类源。",
+      "keywords": [],
+      "arxiv_categories": ["cond-mat.quant-gas"]
+    },
     {
       "id": "quantum_gases_cold_atoms",
       "name": "量子气体与冷原子",

@@ -70,9 +70,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG_ISSUE_TITLE: Research Interests
           LOOKBACK_DAYS: ${{ github.event_name == 'workflow_dispatch' && inputs.lookback_days || vars.LOOKBACK_DAYS || '1' }}
-          MAX_PER_TOPIC: ${{ vars.MAX_PER_TOPIC || '10' }}
+          MAX_PER_TOPIC: ${{ vars.MAX_PER_TOPIC || '80' }}
           MAX_SUMMARIES: ${{ vars.MAX_SUMMARIES || '25' }}
-          MAX_NEW_PAPERS: ${{ vars.MAX_NEW_PAPERS || '80' }}
+          MAX_NEW_PAPERS: ${{ vars.MAX_NEW_PAPERS || '250' }}
           MAX_STORED_PAPERS: ${{ vars.MAX_STORED_PAPERS || '250' }}
           MAX_NEW_CONFERENCE_PAPERS: ${{ vars.MAX_NEW_CONFERENCE_PAPERS || '50' }}
           MAX_STORED_CONFERENCE_PAPERS: ${{ vars.MAX_STORED_CONFERENCE_PAPERS || '300' }}
@@ -90,9 +90,9 @@ jobs:
           ARXIV_QUERY_MODE: ${{ vars.ARXIV_QUERY_MODE || 'keyword' }}
           ARXIV_SORT_BY: ${{ vars.ARXIV_SORT_BY || 'lastUpdatedDate' }}
           ARXIV_EXPAND_CATEGORY_SEARCH: ${{ vars.ARXIV_EXPAND_CATEGORY_SEARCH || 'true' }}
-          ARXIV_CATEGORY_MAX_RESULTS: ${{ vars.ARXIV_CATEGORY_MAX_RESULTS || '8' }}
+          ARXIV_CATEGORY_MAX_RESULTS: ${{ vars.ARXIV_CATEGORY_MAX_RESULTS || '200' }}
           ARXIV_IN_TOPIC_DELAY_SECONDS: ${{ vars.ARXIV_IN_TOPIC_DELAY_SECONDS || '3' }}
-          MIN_DAILY_PAPERS: ${{ vars.MIN_DAILY_PAPERS || '12' }}
+          MIN_DAILY_PAPERS: ${{ vars.MIN_DAILY_PAPERS || '50' }}
           DAILY_BACKFILL_DAYS: ${{ vars.DAILY_BACKFILL_DAYS || '21' }}
           MAX_CONFERENCE_ABSTRACT_ENRICHMENTS: ${{ vars.MAX_CONFERENCE_ABSTRACT_ENRICHMENTS || vars.MAX_CONFERENCE_ARXIV_ENRICHMENTS || '50' }}
           CONFERENCE_ABSTRACT_SOURCES: ${{ vars.CONFERENCE_ABSTRACT_SOURCES || 'arxiv,openalex,crossref' }}

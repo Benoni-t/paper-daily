@@ -169,6 +169,37 @@ def parse_sources(config: dict[str, Any]) -> list[SourceConfig]:
     return sources
 
 
+def journal_highlight_source_names(config: dict[str, Any]) -> set[str]:
+    configured = config.get("journal_highlight_sources", [])
+    if isinstance(configured, str):
+        configured = [configured]
+    if not isinstance(configured, list):
+        return set()
+    return {str(item).strip().lower() for item in configured if str(item).strip()}
+
+
+def highlight_publication_year(paper: dict[str, Any], now: dt.datetime) -> int:
+    parsed = paper_activity_datetime(paper)
+    if parsed.year > 1:
+        return parsed.year
+    return now.year
+
+
+def make_journal_highlight_paper(paper: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
+    highlighted = copy.deepcopy(paper)
+    source_name = str(highlighted.get("source") or "Journal Highlight")
+    base_key = paper_key(highlighted) or slugify(str(highlighted.get("title") or source_name))
+    highlighted["id"] = f"journal-highlight:{base_key}"
+    highlighted["source_type"] = "conference"
+    highlighted["conference"] = {
+        "id": slugify(source_name),
+        "name": source_name,
+        "group": "journal highlight",
+        "year": highlight_publication_year(highlighted, now),
+    }
+    return highlighted
+
+
 def merge_venues(default_venues: list[dict[str, Any]], override_venues: list[dict[str, Any]]) -> list[dict[str, Any]]:
     by_id: dict[str, dict[str, Any]] = {}
     order: list[str] = []
@@ -2112,6 +2143,21 @@ def collect(
             existing_daily_ids.add(paper_id)
             daily_recent_papers.append(paper)
             daily_backfill_added_count += 1
+
+    highlight_sources = journal_highlight_source_names(config)
+    if highlight_sources:
+        existing_highlight_ids = {paper_key(paper) for paper in conference_recent_papers}
+        for paper in daily_recent_papers:
+            source_name = str(paper.get("source") or "").strip().lower()
+            if source_name not in highlight_sources:
+                continue
+            highlighted = make_journal_highlight_paper(paper, now)
+            highlighted_key = paper_key(highlighted)
+            if highlighted_key in existing_highlight_ids:
+                continue
+            existing_highlight_ids.add(highlighted_key)
+            conference_recent_papers.append(highlighted)
+
     candidate_paper_count = len(daily_recent_papers) + len(conference_recent_papers)
     daily_candidate_paper_count = len(daily_recent_papers)
     conference_candidate_paper_count = len(conference_recent_papers)
@@ -2174,7 +2220,7 @@ def collect(
         existing_conference_payload,
         now,
         recent_history_days,
-        active_conference_years_by_source,
+        active_conference_years_by_source if conference_sources else None,
     )
     daily_merged_papers.sort(key=lambda p: (p["best_match"]["score"], paper_activity_datetime(p)), reverse=True)
     conference_merged_papers.sort(key=lambda p: (p["best_match"]["score"], paper_activity_datetime(p)), reverse=True)
