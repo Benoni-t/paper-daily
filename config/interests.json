@@ -52,6 +52,11 @@
       "type": "feed",
       "name": "Reviews of Modern Physics",
       "url": "https://feeds.aps.org/rss/recent/rmp.xml"
+    },
+    {
+      "type": "arxiv",
+      "name": "Quantum Gases",
+      "url": "https://arxiv.org/list/cond-mat.quant-gas/recent"
     }
   ],
   "conference_sources": {
