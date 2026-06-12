@@ -864,6 +864,71 @@ class RetentionTest(unittest.TestCase):
         self.assertEqual(payload["stats"]["daily_backfill_added_count"], 1)
         self.assertTrue(payload["papers"][0]["backfilled_from_recent_arxiv"])
 
+    def test_collect_writes_journal_highlights_from_feed_even_when_daily_relevance_is_low(self) -> None:
+        now = dt.datetime.now(dt.timezone.utc).isoformat()
+        config = {
+            "sources": [{"type": "feed", "name": "Nature News", "url": "https://example.com/rss"}],
+            "journal_highlight_sources": ["Nature News"],
+            "conference_sources": {"enabled": False},
+            "topics": [
+                {
+                    "id": "quantum_gas",
+                    "name": "Quantum gases",
+                    "description": "ultracold atom quantum gas experiments",
+                    "keywords": ["ultracold atom", "quantum gas"],
+                    "arxiv_categories": ["cond-mat.quant-gas"],
+                }
+            ],
+        }
+        feed_paper = {
+            "id": "feed:nature-news:editorial",
+            "source": "Nature News",
+            "title": "Physics news briefing",
+            "authors": [],
+            "summary": "A short editorial news update from Nature.",
+            "published": now,
+            "updated": now,
+            "paper_url": "https://www.nature.com/articles/example",
+            "pdf_url": "",
+            "categories": [],
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = tmp_path / "interests.json"
+            output_path = tmp_path / "papers.json"
+            conference_output_path = tmp_path / "conference.json"
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+
+            with (
+                mock.patch("scripts.collect_papers.fetch_feed", return_value=[feed_paper]),
+                mock.patch("scripts.collect_papers.time.sleep"),
+            ):
+                collect(
+                    config_path,
+                    output_path,
+                    conference_output_path,
+                    days=1,
+                    max_per_topic=10,
+                    max_summaries=0,
+                    max_new_papers=10,
+                    max_stored_papers=10,
+                    max_new_conference_papers=10,
+                    max_stored_conference_papers=10,
+                    max_data_bytes=0,
+                    incremental_since_last_run=False,
+                    recent_history_days=45,
+                    clear_cache=True,
+                )
+
+            conference_payload = json.loads(conference_output_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(conference_payload["stats"]["paper_count"], 1)
+        highlighted = conference_payload["papers"][0]
+        self.assertEqual(highlighted["source"], "Nature News")
+        self.assertEqual(highlighted["source_type"], "conference")
+        self.assertEqual(highlighted["conference"]["group"], "journal highlight")
+
 
 if __name__ == "__main__":
     unittest.main()

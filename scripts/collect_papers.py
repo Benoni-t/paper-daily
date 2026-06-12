@@ -2090,11 +2090,13 @@ def collect(
 
     recent_papers = []
     daily_backfill_candidates = []
+    journal_highlight_candidates = []
     filtered_low_relevance = 0
     raw_daily_candidate_count = 0
     daily_outside_cutoff_count = 0
     backfill_days = max(days, env_int("DAILY_BACKFILL_DAYS", 14))
     daily_backfill_cutoff = now - dt.timedelta(days=max(0, backfill_days))
+    highlight_sources = journal_highlight_source_names(config)
     for paper in dedupe_papers(all_candidates):
         is_conference_paper = paper.get("source_type") == "conference"
         if not is_conference_paper:
@@ -2114,6 +2116,14 @@ def collect(
         matches = [score_paper(topic, paper) for topic in topics]
         matches.sort(key=lambda item: item["score"], reverse=True)
         best_match = matches[0]
+        source_name = str(paper.get("source") or "").strip().lower()
+        if highlight_sources and not is_conference_paper and source_name in highlight_sources:
+            highlighted = make_journal_highlight_paper(paper, now)
+            highlighted["matches"] = matches
+            highlighted["best_match"] = best_match
+            if in_backfill_window:
+                highlighted["backfilled_from_recent_feed"] = True
+            journal_highlight_candidates.append(highlighted)
         if not is_relevant_enough(paper, best_match):
             filtered_low_relevance += 1
             continue
@@ -2147,14 +2157,13 @@ def collect(
             daily_recent_papers.append(paper)
             daily_backfill_added_count += 1
 
-    highlight_sources = journal_highlight_source_names(config)
     if highlight_sources:
         existing_highlight_ids = {paper_key(paper) for paper in conference_recent_papers}
-        for paper in daily_recent_papers:
-            source_name = str(paper.get("source") or "").strip().lower()
-            if source_name not in highlight_sources:
-                continue
-            highlighted = make_journal_highlight_paper(paper, now)
+        journal_highlight_candidates.sort(
+            key=lambda p: (p["best_match"]["score"], paper_activity_datetime(p)),
+            reverse=True,
+        )
+        for highlighted in journal_highlight_candidates:
             highlighted_key = paper_key(highlighted)
             if highlighted_key in existing_highlight_ids:
                 continue
