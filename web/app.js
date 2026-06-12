@@ -138,8 +138,10 @@ function textIncludes(paper, query) {
   const haystack = [
     paper.title,
     paper.summary,
+    paper.seed_topic,
     (paper.authors || []).join(" "),
     (paper.categories || []).join(" "),
+    (paper.matches || []).map((match) => `${match.topic_name || ""} ${match.reason || ""}`).join(" "),
     paper.best_match?.reason,
     paper.chinese_summary?.innovation,
     paper.chinese_summary?.evidence,
@@ -151,11 +153,42 @@ function textIncludes(paper, query) {
   return haystack.includes(query.toLowerCase());
 }
 
+function isUsableTopicMatch(match) {
+  if (!match) return false;
+  if ((match.keyword_hits || []).length) return true;
+  if (["high", "medium"].includes(String(match.level || "").toLowerCase())) return true;
+  return Number(match.score || 0) >= 0.18;
+}
+
+function topicIdsForPaper(paper) {
+  const ids = new Set();
+  if (paper.best_match?.topic_id) ids.add(paper.best_match.topic_id);
+  if (paper.seed_topic) ids.add(paper.seed_topic);
+  for (const match of paper.matches || []) {
+    if (match.topic_id && isUsableTopicMatch(match)) ids.add(match.topic_id);
+  }
+  return ids;
+}
+
+function matchesTopic(paper, topicId) {
+  if (topicId === "all") return true;
+  return topicIdsForPaper(paper).has(topicId);
+}
+
 function matchesBaseFilters(paper) {
   if (!textIncludes(paper, state.filters.query)) return false;
-  if (state.filters.topic !== "all" && paper.best_match?.topic_id !== state.filters.topic) return false;
+  if (!matchesTopic(paper, state.filters.topic)) return false;
   if (state.filters.level !== "all" && levelOf(paper) !== state.filters.level) return false;
   return true;
+}
+
+function isHighlightPaper(paper, date) {
+  const collectedAt = collectionTime(paper);
+  if (!inRange(collectedAt, startOfWeek(date), endOfWeek(date))) return false;
+  if (scoreOf(paper) >= 0.42) return true;
+  if (["high", "medium"].includes(levelOf(paper))) return true;
+  if (paper.source_type === "conference") return scoreOf(paper) >= 0.18 || Boolean(paper.abstract_source);
+  return false;
 }
 
 function matchesView(paper) {
@@ -165,16 +198,24 @@ function matchesView(paper) {
   if (state.filters.view === "daily") return dateKey(collectedAt) === state.filters.date;
   if (state.filters.view === "week") return inRange(collectedAt, startOfWeek(date), endOfWeek(date));
   if (state.filters.view === "month") return inRange(collectedAt, startOfMonth(date), endOfMonth(date));
-  if (state.filters.view === "highlights") {
-    return inRange(collectedAt, startOfWeek(date), endOfWeek(date)) && scoreOf(paper) >= 0.42;
-  }
+  if (state.filters.view === "highlights") return isHighlightPaper(paper, date);
   return true;
 }
 
+function comparePapers(a, b) {
+  return scoreOf(b) - scoreOf(a) || String(b.published || "").localeCompare(String(a.published || ""));
+}
+
 function filteredPapers() {
-  return (activeData().papers || [])
-    .filter((paper) => matchesBaseFilters(paper) && matchesView(paper))
-    .sort((a, b) => scoreOf(b) - scoreOf(a) || String(b.published || "").localeCompare(String(a.published || "")));
+  const basePapers = (activeData().papers || []).filter((paper) => matchesBaseFilters(paper));
+  const papers = basePapers.filter((paper) => matchesView(paper)).sort(comparePapers);
+  if (papers.length || state.filters.view !== "highlights") return papers;
+
+  const date = selectedDate();
+  return basePapers
+    .filter((paper) => inRange(collectionTime(paper), startOfWeek(date), endOfWeek(date)))
+    .sort(comparePapers)
+    .slice(0, 12);
 }
 
 function setText(parent, selector, text) {
@@ -276,14 +317,20 @@ function render() {
   nodes.paperList.appendChild(fragment);
 }
 
+function topicPaperCount(topicId) {
+  return (activeData().papers || []).filter((paper) => matchesTopic(paper, topicId)).length;
+}
+
 function hydrateTopicFilter() {
   nodes.topicFilter.innerHTML = '<option value="all">全部方向</option>';
   for (const topic of activeData().topics || []) {
     const option = document.createElement("option");
+    const count = topicPaperCount(topic.id);
     option.value = topic.id;
-    option.textContent = topic.name;
+    option.textContent = count ? `${topic.name} (${count})` : topic.name;
     nodes.topicFilter.appendChild(option);
   }
+  nodes.topicFilter.value = state.filters.topic;
 }
 
 function hydrateDateFilter() {
