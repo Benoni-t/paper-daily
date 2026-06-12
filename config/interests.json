@@ -6,17 +6,12 @@
     {
       "type": "feed",
       "name": "Nature News",
-      "url": "https://www.nature.com/nature/articles?format=rss&type=news"
+      "url": "https://www.nature.com/nature.rss"
     },
     {
       "type": "feed",
       "name": "Nature Physics",
       "url": "https://www.nature.com/nphys.rss"
-    },
-    {
-      "type": "feed",
-      "name": "Nature Physics Subject",
-      "url": "https://www.nature.com/subjects/physics.rss"
     },
     {
       "type": "feed",
