@@ -1,128 +1,147 @@
 {
   "sources": [
-    { "type": "arxiv", "name": "arXiv" }
+    { "type": "arxiv", "name": "arXiv" },
+    { "type": "openalex", "name": "OpenAlex" },
+    { "type": "crossref", "name": "Crossref" },
+    {
+      "type": "feed",
+      "name": "Nature News",
+      "url": "https://www.nature.com/nature/articles?format=rss&type=news"
+    },
+    {
+      "type": "feed",
+      "name": "Nature Physics",
+      "url": "https://www.nature.com/nphys.rss"
+    },
+    {
+      "type": "feed",
+      "name": "Nature Physics Subject",
+      "url": "https://www.nature.com/subjects/physics.rss"
+    },
+    {
+      "type": "feed",
+      "name": "Physical Review Letters",
+      "url": "https://feeds.aps.org/rss/recent/prl.xml"
+    },
+    {
+      "type": "feed",
+      "name": "Physical Review X",
+      "url": "https://feeds.aps.org/rss/recent/prx.xml"
+    },
+    {
+      "type": "feed",
+      "name": "PRX Quantum",
+      "url": "https://feeds.aps.org/rss/recent/prxquantum.xml"
+    },
+    {
+      "type": "feed",
+      "name": "Physical Review A",
+      "url": "https://feeds.aps.org/rss/recent/pra.xml"
+    },
+    {
+      "type": "feed",
+      "name": "Physical Review B",
+      "url": "https://feeds.aps.org/rss/recent/prb.xml"
+    },
+    {
+      "type": "feed",
+      "name": "Physical Review Applied",
+      "url": "https://feeds.aps.org/rss/recent/prapplied.xml"
+    },
+    {
+      "type": "feed",
+      "name": "Physical Review Research",
+      "url": "https://feeds.aps.org/rss/recent/prresearch.xml"
+    },
+    {
+      "type": "feed",
+      "name": "Reviews of Modern Physics",
+      "url": "https://feeds.aps.org/rss/recent/rmp.xml"
+    }
   ],
   "conference_sources": {
-    "enabled": true,
-    "current_year": 2026,
-    "lookback_years": 2,
-    "venues": [
-      {
-        "id": "isca",
-        "name": "ISCA",
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/isca/isca{year}.bht"]
-      },
-      {
-        "id": "micro",
-        "name": "MICRO",
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/micro/micro{year}.bht"]
-      },
-      {
-        "id": "hpca",
-        "name": "HPCA",
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/hpca/hpca{year}.bht"]
-      },
-      {
-        "id": "asplos",
-        "name": "ASPLOS",
-        "group": "computer architecture",
-        "dblp_toc_patterns": [
-          "db/conf/asplos/asplos{year}-1.bht",
-          "db/conf/asplos/asplos{year}-2.bht",
-          "db/conf/asplos/asplos{year}-3.bht",
-          "db/conf/asplos/asplos{year}-4.bht"
-        ]
-      },
-      {
-        "id": "mlsys",
-        "name": "MLSys",
-        "group": "systems for machine learning",
-        "dblp_toc_patterns": ["db/conf/mlsys/mlsys{year}.bht"]
-      },
-      {
-        "id": "eurosys",
-        "name": "EuroSys",
-        "group": "systems",
-        "dblp_toc_patterns": ["db/conf/eurosys/eurosys{year}.bht"]
-      }
-    ]
+    "enabled": false
   },
   "topics": [
     {
-      "id": "llm_low_precision_quantization",
-      "name": "大模型低精度量化",
-      "description": "关注大语言模型低比特量化、混合精度、量化感知训练、后训练量化、权重量化、激活量化、KV cache 量化以及量化对推理性能和精度的影响。",
+      "id": "quantum_gases_cold_atoms",
+      "name": "量子气体与冷原子",
+      "description": "关注 ultracold atoms、quantum gases、Bose/Fermi gases、BEC、optical lattices、Rydberg atoms、量子模拟和强关联冷原子体系。",
       "keywords": [
-        "large language model quantization",
-        "LLM quantization",
-        "low-bit quantization",
-        "post-training quantization",
-        "weight-only quantization",
-        "activation quantization",
-        "mixed precision",
-        "FP8",
-        "INT4",
-        "INT8",
-        "KV cache quantization"
+        "ultracold atoms",
+        "quantum gas",
+        "Bose-Einstein condensate",
+        "degenerate Fermi gas",
+        "optical lattice",
+        "Rydberg atoms",
+        "cold atom quantum simulation",
+        "strongly correlated cold atoms",
+        "many-body localization",
+        "spinor condensate",
+        "synthetic gauge field",
+        "Feshbach resonance"
       ],
-      "arxiv_categories": ["cs.CL", "cs.LG", "cs.AI", "cs.DC"]
+      "arxiv_categories": ["cond-mat.quant-gas", "physics.atom-ph", "quant-ph", "cond-mat.str-el"]
     },
     {
-      "id": "tensor_compute_unit_architecture",
-      "name": "张量计算单元结构",
-      "description": "关注 GPU/NPU/TPU 张量计算单元、矩阵乘加阵列、数据流架构、片上存储层次、低精度张量核、AI 加速器微架构和算子映射。",
+      "id": "topological_quantum_matter",
+      "name": "拓扑量子物态与拓扑物理",
+      "description": "关注 topological phases、topological insulators/superconductors、Chern bands、fractional Chern insulators、Majorana modes、quantum Hall、拓扑量子材料和非平衡拓扑现象。",
       "keywords": [
-        "tensor processing unit",
-        "tensor core",
-        "matrix multiply unit",
-        "systolic array",
-        "AI accelerator architecture",
-        "NPU architecture",
-        "GPU tensor core",
-        "low precision tensor compute",
-        "dataflow architecture",
-        "on-chip memory hierarchy"
+        "topological phase",
+        "topological insulator",
+        "topological superconductor",
+        "Chern band",
+        "fractional Chern insulator",
+        "Majorana zero mode",
+        "quantum Hall",
+        "topological quantum matter",
+        "Berry curvature",
+        "topological order",
+        "non-Hermitian topology",
+        "Floquet topology"
       ],
-      "arxiv_categories": ["cs.AR", "cs.DC", "cs.LG", "cs.PF"]
+      "arxiv_categories": ["cond-mat.mes-hall", "cond-mat.str-el", "cond-mat.mtrl-sci", "quant-ph"]
     },
     {
-      "id": "llm_inference_cluster_communication",
-      "name": "大模型推理集群通信优化",
-      "description": "关注分布式大模型推理、prefill/decode 分离、张量并行、流水并行、专家并行、跨节点通信、调度、负载均衡和 serving 系统吞吐延迟优化。",
+      "id": "superconducting_circuits_cqed",
+      "name": "超导电路与 circuit QED",
+      "description": "关注 superconducting circuits、circuit QED、transmon/fluxonium qubits、microwave resonators、量子测量、量子模拟、误差校正、参数放大和超导量子硬件。",
       "keywords": [
-        "LLM inference serving",
-        "distributed inference",
-        "inference cluster",
-        "tensor parallelism",
-        "pipeline parallelism",
-        "expert parallelism",
-        "all-reduce",
-        "collective communication",
-        "prefill decode disaggregation",
-        "serving scheduler"
+        "superconducting circuit",
+        "circuit QED",
+        "transmon qubit",
+        "fluxonium",
+        "microwave resonator",
+        "Josephson junction",
+        "superconducting qubit",
+        "quantum error correction",
+        "parametric amplifier",
+        "bosonic qubit",
+        "quantum measurement",
+        "superconducting quantum processor"
       ],
-      "arxiv_categories": ["cs.DC", "cs.PF", "cs.CL", "cs.LG"]
+      "arxiv_categories": ["quant-ph", "cond-mat.supr-con", "cond-mat.mes-hall"]
     },
     {
-      "id": "kvcache_compression_storage_scheduling",
-      "name": "KV cache 压缩与存储调度",
-      "description": "关注大模型推理中的 KV cache 压缩、淘汰、分页、卸载、预取、层级存储、显存管理和长上下文推理效率优化。",
+      "id": "quantum_simulation_platforms",
+      "name": "量子模拟平台与多体动力学",
+      "description": "关注冷原子、离子、超导电路和光学平台上的量子模拟，多体动力学、开放量子系统、量子相变和实验可观测量。",
       "keywords": [
-        "KV cache compression",
-        "KV cache eviction",
-        "KV cache scheduling",
-        "paged attention",
-        "attention cache",
-        "long context inference",
-        "memory offloading",
-        "GPU memory management",
-        "cache prefetching",
-        "LLM serving memory"
+        "quantum simulation",
+        "many-body dynamics",
+        "open quantum system",
+        "quantum phase transition",
+        "analog quantum simulator",
+        "digital quantum simulation",
+        "Hamiltonian engineering",
+        "driven-dissipative quantum system",
+        "quantum quench",
+        "entanglement dynamics",
+        "quantum many-body experiment",
+        "synthetic quantum matter"
       ],
-      "arxiv_categories": ["cs.CL", "cs.LG", "cs.DC", "cs.PF"]
+      "arxiv_categories": ["quant-ph", "cond-mat.quant-gas", "cond-mat.str-el", "physics.atom-ph"]
     }
   ]
 }
