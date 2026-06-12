@@ -69,7 +69,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG_ISSUE_TITLE: Research Interests
-          LOOKBACK_DAYS: ${{ github.event_name == 'workflow_dispatch' && inputs.lookback_days || vars.LOOKBACK_DAYS || '1' }}
+          LOOKBACK_DAYS: ${{ github.event_name == 'workflow_dispatch' && inputs.lookback_days || github.event_name == 'schedule' && (vars.LOOKBACK_DAYS || '1') || vars.LOOKBACK_DAYS || '14' }}
           MAX_PER_TOPIC: ${{ vars.MAX_PER_TOPIC || '300' }}
           MAX_SUMMARIES: ${{ vars.MAX_SUMMARIES || '25' }}
           MAX_NEW_PAPERS: ${{ vars.MAX_NEW_PAPERS || '1000' }}
@@ -91,7 +91,10 @@ jobs:
           ARXIV_SORT_BY: ${{ vars.ARXIV_SORT_BY || 'lastUpdatedDate' }}
           ARXIV_EXPAND_CATEGORY_SEARCH: ${{ vars.ARXIV_EXPAND_CATEGORY_SEARCH || 'true' }}
           ARXIV_CATEGORY_MAX_RESULTS: ${{ vars.ARXIV_CATEGORY_MAX_RESULTS || '300' }}
-          ARXIV_IN_TOPIC_DELAY_SECONDS: ${{ vars.ARXIV_IN_TOPIC_DELAY_SECONDS || '3' }}
+          ARXIV_DELAY_SECONDS: ${{ vars.ARXIV_DELAY_SECONDS || '20' }}
+          ARXIV_IN_TOPIC_DELAY_SECONDS: ${{ vars.ARXIV_IN_TOPIC_DELAY_SECONDS || '5' }}
+          ARXIV_RETRY_THROTTLED: ${{ vars.ARXIV_RETRY_THROTTLED || 'true' }}
+          ARXIV_RETRIES: ${{ vars.ARXIV_RETRIES || '5' }}
           MIN_DAILY_PAPERS: ${{ vars.MIN_DAILY_PAPERS || '100' }}
           DAILY_BACKFILL_DAYS: ${{ vars.DAILY_BACKFILL_DAYS || '21' }}
           MAX_CONFERENCE_ABSTRACT_ENRICHMENTS: ${{ vars.MAX_CONFERENCE_ABSTRACT_ENRICHMENTS || vars.MAX_CONFERENCE_ARXIV_ENRICHMENTS || '50' }}
@@ -106,7 +109,7 @@ jobs:
           SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
           CUSTOM_FEED_HEADERS: ${{ secrets.CUSTOM_FEED_HEADERS }}
           CUSTOM_FEED_BEARER_TOKEN: ${{ secrets.CUSTOM_FEED_BEARER_TOKEN }}
-          CLEAR_PAPER_CACHE: ${{ github.event_name == 'workflow_dispatch' && inputs.clear_cache || github.event_name == 'push' && 'true' || vars.CLEAR_PAPER_CACHE || 'false' }}
+          CLEAR_PAPER_CACHE: ${{ github.event_name == 'workflow_dispatch' && inputs.clear_cache || (github.event_name == 'push' || github.event_name == 'issues') && 'true' || vars.CLEAR_PAPER_CACHE || 'false' }}
           INCREMENTAL_SINCE_LAST_RUN: ${{ github.event_name == 'schedule' && 'true' || vars.INCREMENTAL_SINCE_LAST_RUN || 'false' }}
           LLM_CONCURRENCY: ${{ vars.LLM_CONCURRENCY || '2' }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
