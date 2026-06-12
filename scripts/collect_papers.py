@@ -557,26 +557,29 @@ def fetch_arxiv_query(search_query: str, max_results: int, sort_by: str, sort_or
 
 def fetch_arxiv(topic: Topic, max_results: int) -> list[dict[str, Any]]:
     sort_by = os.getenv("ARXIV_SORT_BY", "lastUpdatedDate").strip() or "lastUpdatedDate"
+    topic_query = arxiv_query_for_topic(topic)
     papers = fetch_arxiv_query(
-        arxiv_query_for_topic(topic),
+        topic_query,
         max_results,
         sort_by=sort_by,
         sort_order="descending",
         label=topic.name,
     )
     if env_flag("ARXIV_EXPAND_CATEGORY_SEARCH", False) and topic.arxiv_categories:
-        in_topic_delay = float(os.getenv("ARXIV_IN_TOPIC_DELAY_SECONDS", "3"))
-        if in_topic_delay > 0:
-            time.sleep(in_topic_delay)
-        category_max_results = max(1, int(os.getenv("ARXIV_CATEGORY_MAX_RESULTS", str(max_results))))
-        category_papers = fetch_arxiv_query(
-            arxiv_category_query_for_topic(topic),
-            category_max_results,
-            sort_by=sort_by,
-            sort_order="descending",
-            label=f"{topic.name} categories",
-        )
-        papers = dedupe_papers([*papers, *category_papers])
+        category_query = arxiv_category_query_for_topic(topic)
+        if category_query != topic_query:
+            in_topic_delay = float(os.getenv("ARXIV_IN_TOPIC_DELAY_SECONDS", "3"))
+            if in_topic_delay > 0:
+                time.sleep(in_topic_delay)
+            category_max_results = max(1, int(os.getenv("ARXIV_CATEGORY_MAX_RESULTS", str(max_results))))
+            category_papers = fetch_arxiv_query(
+                category_query,
+                category_max_results,
+                sort_by=sort_by,
+                sort_order="descending",
+                label=f"{topic.name} categories",
+            )
+            papers = dedupe_papers([*papers, *category_papers])
     for paper in papers:
         paper["seed_topic"] = topic.id
     return papers

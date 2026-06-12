@@ -80,6 +80,9 @@ class RetentionTest(unittest.TestCase):
         os.environ.pop("CONFERENCE_ABSTRACT_SOURCES", None)
         os.environ.pop("ENABLE_SEMANTIC_SCHOLAR", None)
         os.environ.pop("ARXIV_QUERY_MODE", None)
+        os.environ.pop("ARXIV_EXPAND_CATEGORY_SEARCH", None)
+        os.environ.pop("ARXIV_IN_TOPIC_DELAY_SECONDS", None)
+        os.environ.pop("ARXIV_CATEGORY_MAX_RESULTS", None)
         os.environ.pop("MIN_DAILY_PAPERS", None)
         os.environ.pop("DAILY_BACKFILL_DAYS", None)
 
@@ -170,6 +173,30 @@ class RetentionTest(unittest.TestCase):
             with self.assertRaises(urllib.error.HTTPError):
                 fetch_arxiv(topic, 1)
 
+        sleep_mock.assert_not_called()
+
+    def test_fetch_arxiv_skips_duplicate_category_expansion_for_category_only_topic(self) -> None:
+        os.environ["ARXIV_EXPAND_CATEGORY_SEARCH"] = "true"
+        topic = Topic(
+            id="quant_gas_recent",
+            name="cond-mat.quant-gas recent",
+            description="",
+            keywords=[],
+            arxiv_categories=["cond-mat.quant-gas"],
+        )
+
+        with (
+            mock.patch(
+                "scripts.collect_papers.fetch_arxiv_query",
+                return_value=[{"id": "2601.00001", "title": "Example"}],
+            ) as fetch_mock,
+            mock.patch("scripts.collect_papers.time.sleep") as sleep_mock,
+        ):
+            papers = fetch_arxiv(topic, 100)
+
+        self.assertEqual(len(papers), 1)
+        self.assertEqual(fetch_mock.call_count, 1)
+        fetch_mock.assert_called_once()
         sleep_mock.assert_not_called()
 
     def test_parse_sources_supports_custom_feed(self) -> None:

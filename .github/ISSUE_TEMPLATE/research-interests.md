@@ -87,6 +87,48 @@ assignees: ''
       "arxiv_categories": ["cond-mat.quant-gas"]
     },
     {
+      "id": "physics_atom_ph_recent",
+      "name": "physics.atom-ph 每日更新",
+      "description": "完整跟踪 arXiv physics.atom-ph recent 列表中的每日更新，覆盖原子物理、冷原子实验和相关量子光学方向。",
+      "keywords": [],
+      "arxiv_categories": ["physics.atom-ph"]
+    },
+    {
+      "id": "quant_ph_recent",
+      "name": "quant-ph 每日更新",
+      "description": "完整跟踪 arXiv quant-ph recent 列表中的每日更新，覆盖量子信息、超导量子电路、circuit QED 和量子模拟方向。",
+      "keywords": [],
+      "arxiv_categories": ["quant-ph"]
+    },
+    {
+      "id": "cond_mat_supr_con_recent",
+      "name": "cond-mat.supr-con 每日更新",
+      "description": "完整跟踪 arXiv cond-mat.supr-con recent 列表中的每日更新，覆盖超导、约瑟夫森器件和相关凝聚态方向。",
+      "keywords": [],
+      "arxiv_categories": ["cond-mat.supr-con"]
+    },
+    {
+      "id": "cond_mat_mes_hall_recent",
+      "name": "cond-mat.mes-hall 每日更新",
+      "description": "完整跟踪 arXiv cond-mat.mes-hall recent 列表中的每日更新，覆盖介观、量子霍尔、拓扑输运和相关器件方向。",
+      "keywords": [],
+      "arxiv_categories": ["cond-mat.mes-hall"]
+    },
+    {
+      "id": "cond_mat_str_el_recent",
+      "name": "cond-mat.str-el 每日更新",
+      "description": "完整跟踪 arXiv cond-mat.str-el recent 列表中的每日更新，覆盖强关联电子、拓扑物态和量子多体方向。",
+      "keywords": [],
+      "arxiv_categories": ["cond-mat.str-el"]
+    },
+    {
+      "id": "cond_mat_mtrl_sci_recent",
+      "name": "cond-mat.mtrl-sci 每日更新",
+      "description": "完整跟踪 arXiv cond-mat.mtrl-sci recent 列表中的每日更新，覆盖拓扑材料和量子材料方向。",
+      "keywords": [],
+      "arxiv_categories": ["cond-mat.mtrl-sci"]
+    },
+    {
       "id": "quantum_gases_cold_atoms",
       "name": "量子气体与冷原子",
       "description": "关注 ultracold atoms、quantum gases、Bose/Fermi gases、BEC、optical lattices、Rydberg atoms、量子模拟和强关联冷原子体系。",
