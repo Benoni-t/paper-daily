@@ -1,5 +1,13 @@
 const THEME_STORAGE_KEY = "paper-daily-theme";
 const THEMES = new Set(["dark", "light", "eye"]);
+const JOURNAL_SOURCE_PATTERNS = [
+  "nature",
+  "physical review",
+  "prx",
+  "reviews of modern physics",
+  "science",
+  "cell",
+];
 
 const state = {
   datasets: {
@@ -87,8 +95,12 @@ function dateKey(value) {
   return `${year}-${month}-${day}`;
 }
 
+function paperActivityTime(paper) {
+  return paper.updated || paper.published || paper.last_seen_at || paper.first_seen_at || "";
+}
+
 function collectionTime(paper) {
-  return paper.last_seen_at || paper.first_seen_at || paper.published || paper.updated || "";
+  return paper.last_seen_at || paper.first_seen_at || paperActivityTime(paper);
 }
 
 function startOfDay(date) {
@@ -183,8 +195,8 @@ function matchesBaseFilters(paper) {
 }
 
 function isHighlightPaper(paper, date) {
-  const collectedAt = collectionTime(paper);
-  if (!inRange(collectedAt, startOfWeek(date), endOfWeek(date))) return false;
+  const activityAt = paperActivityTime(paper);
+  if (!inRange(activityAt, startOfWeek(date), endOfWeek(date))) return false;
   if (scoreOf(paper) >= 0.42) return true;
   if (["high", "medium"].includes(levelOf(paper))) return true;
   if (paper.source_type === "conference") return scoreOf(paper) >= 0.18 || Boolean(paper.abstract_source);
@@ -194,16 +206,16 @@ function isHighlightPaper(paper, date) {
 function matchesView(paper) {
   if (state.filters.view === "all") return true;
   const date = selectedDate();
-  const collectedAt = collectionTime(paper);
-  if (state.filters.view === "daily") return dateKey(collectedAt) === state.filters.date;
-  if (state.filters.view === "week") return inRange(collectedAt, startOfWeek(date), endOfWeek(date));
-  if (state.filters.view === "month") return inRange(collectedAt, startOfMonth(date), endOfMonth(date));
+  const activityAt = paperActivityTime(paper);
+  if (state.filters.view === "daily") return dateKey(activityAt) === state.filters.date;
+  if (state.filters.view === "week") return inRange(activityAt, startOfWeek(date), endOfWeek(date));
+  if (state.filters.view === "month") return inRange(activityAt, startOfMonth(date), endOfMonth(date));
   if (state.filters.view === "highlights") return isHighlightPaper(paper, date);
   return true;
 }
 
 function comparePapers(a, b) {
-  return scoreOf(b) - scoreOf(a) || String(b.published || "").localeCompare(String(a.published || ""));
+  return scoreOf(b) - scoreOf(a) || String(paperActivityTime(b)).localeCompare(String(paperActivityTime(a)));
 }
 
 function filteredPapers() {
@@ -213,7 +225,7 @@ function filteredPapers() {
 
   const date = selectedDate();
   return basePapers
-    .filter((paper) => inRange(collectionTime(paper), startOfWeek(date), endOfWeek(date)))
+    .filter((paper) => inRange(paperActivityTime(paper), startOfWeek(date), endOfWeek(date)))
     .sort(comparePapers)
     .slice(0, 12);
 }
@@ -241,7 +253,7 @@ function renderPaper(paper) {
   badge.textContent = `${level} ${scoreOf(paper).toFixed(2)}`;
   badge.classList.add(level);
 
-  setText(node, ".paper-date", `发布 ${formatDate(paper.published)} · 收录 ${formatDate(collectionTime(paper))}`);
+  setText(node, ".paper-date", `发布 ${formatDate(paperActivityTime(paper))} · 收录 ${formatDate(collectionTime(paper))}`);
   setText(node, ".paper-source", paper.source || "paper");
   setText(node, ".paper-title", paper.title);
   setText(node, ".paper-authors", (paper.authors || []).slice(0, 8).join(", "));
@@ -283,7 +295,7 @@ function viewLabels() {
   const weekEnd = formatDate(weekEndDate.toISOString());
   const monthLabel = `${date.getFullYear()} 年 ${String(date.getMonth() + 1).padStart(2, "0")} 月`;
   return {
-    all: [state.filters.collection === "conference" ? "精选期刊" : "全部论文", "全部已收录论文"],
+    all: [state.filters.collection === "conference" ? "精选论文 / 期刊" : "全部论文", "全部已收录论文"],
     daily: ["当日论文", dayLabel],
     week: ["本周论文", `${weekStart} - ${weekEnd}`],
     month: ["月度论文", monthLabel],
@@ -335,7 +347,7 @@ function hydrateTopicFilter() {
 
 function hydrateDateFilter() {
   const data = activeData();
-  const dates = [...new Set((data.papers || []).map((paper) => dateKey(collectionTime(paper))).filter(Boolean))].sort().reverse();
+  const dates = [...new Set((data.papers || []).map((paper) => dateKey(paperActivityTime(paper))).filter(Boolean))].sort().reverse();
   const fallback = dateKey(data.generated_at_iso || new Date().toISOString());
   const options = dates.length ? dates : [fallback];
   state.filters.date = options[0];
@@ -351,13 +363,27 @@ function hydrateDateFilter() {
 function updateStats() {
   const papers = activeData().papers || [];
   const date = selectedDate();
-  const weekPapers = papers.filter((paper) => inRange(collectionTime(paper), startOfWeek(date), endOfWeek(date)));
-  const monthPapers = papers.filter((paper) => inRange(collectionTime(paper), startOfMonth(date), endOfMonth(date)));
+  const weekPapers = papers.filter((paper) => inRange(paperActivityTime(paper), startOfWeek(date), endOfWeek(date)));
+  const monthPapers = papers.filter((paper) => inRange(paperActivityTime(paper), startOfMonth(date), endOfMonth(date)));
   const top = papers.reduce((max, paper) => Math.max(max, scoreOf(paper)), 0);
   nodes.paperCount.textContent = String(papers.length);
   nodes.weekCount.textContent = String(weekPapers.length);
   nodes.monthCount.textContent = String(monthPapers.length);
   nodes.topScore.textContent = top.toFixed(2);
+}
+
+function syncTabState() {
+  for (const item of nodes.collectionTabs) item.classList.toggle("active", item.dataset.collection === state.filters.collection);
+  for (const item of nodes.tabs) item.classList.toggle("active", item.dataset.view === state.filters.view);
+}
+
+function refreshControlsAndRender() {
+  hydrateTopicFilter();
+  hydrateDateFilter();
+  updateStats();
+  updateUpdatedAt();
+  syncTabState();
+  render();
 }
 
 function bindEvents() {
@@ -383,13 +409,7 @@ function bindEvents() {
       state.filters.collection = tab.dataset.collection;
       state.filters.view = state.filters.collection === "conference" ? "all" : "daily";
       state.filters.topic = "all";
-      for (const item of nodes.collectionTabs) item.classList.toggle("active", item === tab);
-      for (const item of nodes.tabs) item.classList.toggle("active", item.dataset.view === state.filters.view);
-      hydrateTopicFilter();
-      hydrateDateFilter();
-      updateStats();
-      updateUpdatedAt();
-      render();
+      refreshControlsAndRender();
     });
   }
   nodes.dateFilter.addEventListener("change", (event) => {
@@ -400,7 +420,8 @@ function bindEvents() {
   for (const tab of nodes.tabs) {
     tab.addEventListener("click", () => {
       state.filters.view = tab.dataset.view;
-      for (const item of nodes.tabs) item.classList.toggle("active", item === tab);
+      syncTabState();
+      updateStats();
       render();
     });
   }
@@ -418,6 +439,58 @@ async function loadOptionalData(path) {
   return response.json();
 }
 
+function isJournalLikePaper(paper) {
+  if (paper.source_type === "conference") return true;
+  const source = String(paper.source || "").toLowerCase();
+  return JOURNAL_SOURCE_PATTERNS.some((pattern) => source.includes(pattern));
+}
+
+function isFallbackHighlight(paper) {
+  return scoreOf(paper) >= 0.42 || ["high", "medium"].includes(levelOf(paper));
+}
+
+function asFallbackHighlightPaper(paper) {
+  return {
+    ...paper,
+    id: `fallback-highlight:${paper.id || paper.paper_url || paper.title}`,
+    source: `${paper.source || "Paper"} · 精选`,
+    source_type: "conference",
+  };
+}
+
+function buildConferenceFallback(dailyData, conferenceData) {
+  const dailyPapers = dailyData?.papers || [];
+  const existing = conferenceData?.papers || [];
+  if (existing.length) return conferenceData;
+
+  let papers = dailyPapers.filter(isJournalLikePaper);
+  let mode = "journal-fallback";
+  if (!papers.length) {
+    papers = dailyPapers.filter(isFallbackHighlight).sort(comparePapers).slice(0, 24).map(asFallbackHighlightPaper);
+    mode = "daily-highlight-fallback";
+  }
+  if (!papers.length) {
+    papers = [...dailyPapers].sort(comparePapers).slice(0, 12).map(asFallbackHighlightPaper);
+    mode = "daily-top-fallback";
+  }
+
+  return {
+    generated_at: conferenceData?.generated_at || dailyData?.generated_at,
+    generated_at_iso: conferenceData?.generated_at_iso || dailyData?.generated_at_iso || new Date().toISOString(),
+    config_source: conferenceData?.config_source || dailyData?.config_source || "fallback",
+    data_kind: "conference",
+    topics: conferenceData?.topics?.length ? conferenceData.topics : dailyData?.topics || [],
+    papers,
+    stats: {
+      ...(dailyData?.stats || {}),
+      ...(conferenceData?.stats || {}),
+      paper_count: papers.length,
+      new_paper_count: papers.length,
+      collection_mode: mode,
+    },
+  };
+}
+
 function updateUpdatedAt(message = "") {
   if (message) {
     nodes.updatedAt.textContent = message;
@@ -425,8 +498,8 @@ function updateUpdatedAt(message = "") {
   }
   const data = activeData();
   const stats = data.stats || {};
-  const mode = stats.collection_mode === "incremental" ? "增量" : "初始化";
-  const kind = state.filters.collection === "conference" ? "精选期刊" : "每日新论文";
+  const mode = stats.collection_mode === "incremental" ? "增量" : stats.collection_mode || "初始化";
+  const kind = state.filters.collection === "conference" ? "精选论文 / 期刊" : "每日新论文";
   nodes.updatedAt.textContent = `${kind} · 更新于 ${formatDate(data.generated_at_iso)} · ${mode} · ${stats.llm_enabled ? "LLM" : "基础"}`;
 }
 
@@ -435,7 +508,8 @@ async function main() {
   bindEvents();
   try {
     state.datasets.daily = await loadData();
-    state.datasets.conference = await loadOptionalData("./data/conference_papers.json");
+    const conferenceData = await loadOptionalData("./data/conference_papers.json");
+    state.datasets.conference = buildConferenceFallback(state.datasets.daily, conferenceData);
   } catch (error) {
     state.datasets.daily = {
       generated_at_iso: new Date().toISOString(),
@@ -456,6 +530,7 @@ async function main() {
   hydrateTopicFilter();
   hydrateDateFilter();
   updateStats();
+  syncTabState();
   render();
 }
 
