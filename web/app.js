@@ -1,5 +1,6 @@
 const THEME_STORAGE_KEY = "paper-daily-theme";
 const THEMES = new Set(["dark", "light", "eye"]);
+const FUTURE_DATE_TOLERANCE_DAYS = 2;
 const JOURNAL_SOURCE_PATTERNS = [
   "nature",
   "physical review",
@@ -80,6 +81,25 @@ function parseDate(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function maxAcceptedDate() {
+  const max = new Date();
+  max.setDate(max.getDate() + FUTURE_DATE_TOLERANCE_DAYS);
+  return max;
+}
+
+function isFutureDate(value) {
+  const date = parseDate(value);
+  return Boolean(date && date > maxAcceptedDate());
+}
+
+function firstNonFutureDate(...values) {
+  for (const value of values) {
+    if (!value || isFutureDate(value)) continue;
+    if (parseDate(value)) return value;
+  }
+  return "";
+}
+
 function formatDate(value) {
   const date = parseDate(value);
   if (!date) return value ? String(value).slice(0, 10) : "-";
@@ -96,11 +116,23 @@ function dateKey(value) {
 }
 
 function paperActivityTime(paper) {
-  return paper.updated || paper.published || paper.last_seen_at || paper.first_seen_at || "";
+  return firstNonFutureDate(
+    paper.updated,
+    paper.published,
+    paper.last_seen_at,
+    paper.first_seen_at,
+    activeData().generated_at_iso,
+  );
 }
 
 function collectionTime(paper) {
-  return paper.last_seen_at || paper.first_seen_at || paperActivityTime(paper);
+  return firstNonFutureDate(
+    paper.last_seen_at,
+    paper.first_seen_at,
+    paper.updated,
+    paper.published,
+    activeData().generated_at_iso,
+  );
 }
 
 function startOfDay(date) {
@@ -253,7 +285,9 @@ function renderPaper(paper) {
   badge.textContent = `${level} ${scoreOf(paper).toFixed(2)}`;
   badge.classList.add(level);
 
-  setText(node, ".paper-date", `发布 ${formatDate(paperActivityTime(paper))} · 收录 ${formatDate(collectionTime(paper))}`);
+  const rawPublished = paper.updated || paper.published || "";
+  const shownPublished = isFutureDate(rawPublished) ? paperActivityTime(paper) : rawPublished;
+  setText(node, ".paper-date", `发布 ${formatDate(shownPublished)} · 收录 ${formatDate(collectionTime(paper))}`);
   setText(node, ".paper-source", paper.source || "paper");
   setText(node, ".paper-title", paper.title);
   setText(node, ".paper-authors", (paper.authors || []).slice(0, 8).join(", "));
@@ -347,8 +381,14 @@ function hydrateTopicFilter() {
 
 function hydrateDateFilter() {
   const data = activeData();
-  const dates = [...new Set((data.papers || []).map((paper) => dateKey(paperActivityTime(paper))).filter(Boolean))].sort().reverse();
-  const fallback = dateKey(data.generated_at_iso || new Date().toISOString());
+  const dates = [
+    ...new Set(
+      (data.papers || [])
+        .map((paper) => dateKey(paperActivityTime(paper)))
+        .filter(Boolean),
+    ),
+  ].sort().reverse();
+  const fallback = dateKey(firstNonFutureDate(data.generated_at_iso, new Date().toISOString()) || new Date().toISOString());
   const options = dates.length ? dates : [fallback];
   state.filters.date = options[0];
   nodes.dateFilter.textContent = "";
