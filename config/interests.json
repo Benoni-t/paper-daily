@@ -1,8 +1,6 @@
 {
   "sources": [
     { "type": "arxiv", "name": "arXiv" },
-    { "type": "openalex", "name": "OpenAlex" },
-    { "type": "crossref", "name": "Crossref" },
     {
       "type": "feed",
       "name": "Nature News",
