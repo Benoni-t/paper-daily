@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Paper Daily</title>
-    <link rel="stylesheet" href="./styles.css?v=20260615-date-fix" />
+    <link rel="stylesheet" href="./styles.css?v=20260617-language-switch" />
   </head>
   <body>
     <header class="topbar">
@@ -12,87 +12,95 @@
         <span class="brand-mark">PD</span>
         <div>
           <h1>Paper Daily</h1>
-          <p id="updatedAt">正在读取数据</p>
+          <p id="updatedAt" data-i18n="loading">正在读取数据</p>
         </div>
       </div>
       <nav class="top-actions" aria-label="页面操作">
+        <div class="theme-switcher" role="radiogroup" aria-label="Language">
+          <button class="theme-option" type="button" role="radio" aria-checked="true" data-language-option="zh" title="中文">
+            <span data-i18n="languageZh">中文</span>
+          </button>
+          <button class="theme-option" type="button" role="radio" aria-checked="false" data-language-option="en" title="English">
+            <span data-i18n="languageEn">EN</span>
+          </button>
+        </div>
         <div class="theme-switcher" role="radiogroup" aria-label="选择网站背景主题">
           <button class="theme-option" type="button" role="radio" aria-checked="true" data-theme-option="dark" title="深色主题">
             <span class="theme-swatch dark-swatch"></span>
-            <span>深色</span>
+            <span data-i18n="dark">深色</span>
           </button>
           <button class="theme-option" type="button" role="radio" aria-checked="false" data-theme-option="light" title="淡色主题">
             <span class="theme-swatch light-swatch"></span>
-            <span>淡色</span>
+            <span data-i18n="light">浅色</span>
           </button>
           <button class="theme-option" type="button" role="radio" aria-checked="false" data-theme-option="eye" title="护眼主题">
             <span class="theme-swatch eye-swatch"></span>
-            <span>护眼</span>
+            <span data-i18n="eye">护眼</span>
           </button>
         </div>
-        <a class="icon-link" href="https://github.com/Benoni-t/paper-daily/issues" target="_blank" rel="noreferrer" title="配置研究方向">⚙</a>
-        <a class="icon-link" href="https://github.com/Benoni-t/paper-daily/actions" target="_blank" rel="noreferrer" title="查看更新任务">↻</a>
+        <a class="icon-link" href="https://github.com/Benoni-t/paper-daily/issues" target="_blank" rel="noreferrer" title="配置研究方向" data-i18n-title="settingsTitle">⚙</a>
+        <a class="icon-link" href="https://github.com/Benoni-t/paper-daily/actions" target="_blank" rel="noreferrer" title="查看更新任务" data-i18n-title="refreshTitle">↻</a>
       </nav>
     </header>
 
     <main class="shell">
       <section class="overview" aria-label="概览">
         <div class="overview-title">
-          <p>Research Radar</p>
-          <h2 id="viewTitle">最新论文</h2>
+          <p data-i18n="researchRadar">Research Radar</p>
+          <h2 id="viewTitle" data-i18n="latestPapers">最新论文</h2>
         </div>
         <div class="metric-grid">
           <div class="metric">
             <span class="metric-value" id="paperCount">0</span>
-            <span class="metric-label">总论文</span>
+            <span class="metric-label" data-i18n="totalPapers">总论文</span>
           </div>
           <div class="metric">
             <span class="metric-value" id="weekCount">0</span>
-            <span class="metric-label">本周新增</span>
+            <span class="metric-label" data-i18n="weekAdded">本周新增</span>
           </div>
           <div class="metric">
             <span class="metric-value" id="monthCount">0</span>
-            <span class="metric-label">本月新增</span>
+            <span class="metric-label" data-i18n="monthAdded">本月新增</span>
           </div>
           <div class="metric accent">
             <span class="metric-value" id="topScore">0.00</span>
-            <span class="metric-label">最高匹配</span>
+            <span class="metric-label" data-i18n="topScore">最高匹配</span>
           </div>
         </div>
       </section>
 
       <section class="toolbar" aria-label="筛选">
         <div class="collection-tabs" role="tablist" aria-label="论文集合">
-          <button class="collection-tab active" type="button" data-collection="daily">每日新论文</button>
-          <button class="collection-tab" type="button" data-collection="conference">精选论文 / 期刊</button>
+          <button class="collection-tab active" type="button" data-collection="daily" data-i18n="dailyCollection">每日新论文</button>
+          <button class="collection-tab" type="button" data-collection="conference" data-i18n="conferenceCollection">精选论文 / 期刊</button>
         </div>
         <div class="tabs" role="tablist" aria-label="视图">
-          <button class="tab" type="button" data-view="all">全部</button>
-          <button class="tab active" type="button" data-view="daily">当日</button>
-          <button class="tab" type="button" data-view="week">本周</button>
-          <button class="tab" type="button" data-view="month">本月</button>
-          <button class="tab" type="button" data-view="highlights">本周精选</button>
+          <button class="tab" type="button" data-view="all" data-i18n="all">全部</button>
+          <button class="tab active" type="button" data-view="daily" data-i18n="daily">当日</button>
+          <button class="tab" type="button" data-view="week" data-i18n="week">本周</button>
+          <button class="tab" type="button" data-view="month" data-i18n="month">本月</button>
+          <button class="tab" type="button" data-view="highlights" data-i18n="highlights">本周精选</button>
         </div>
         <div class="filters">
           <label class="field compact">
-            <span>日期</span>
+            <span data-i18n="date">日期</span>
             <select id="dateFilter"></select>
           </label>
           <label class="field">
-            <span>方向</span>
+            <span data-i18n="topic">方向</span>
             <select id="topicFilter"></select>
           </label>
           <label class="field">
-            <span>匹配</span>
+            <span data-i18n="match">匹配</span>
             <select id="levelFilter">
-              <option value="all">全部</option>
+              <option value="all" data-i18n="allLevels">全部</option>
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
           </label>
           <label class="field search">
-            <span>搜索</span>
+            <span data-i18n="search">搜索</span>
             <input id="searchInput" type="search" placeholder="标题、作者、关键词" />
           </label>
         </div>
@@ -123,27 +131,27 @@
           <div class="paper-tags"></div>
           <dl class="summary-grid">
             <div>
-              <dt>问题</dt>
+              <dt data-summary-label="problem">问题</dt>
               <dd class="summary-problem"></dd>
             </div>
             <div>
-              <dt>方法</dt>
+              <dt data-summary-label="method">方法</dt>
               <dd class="summary-method"></dd>
             </div>
             <div>
-              <dt>创新</dt>
+              <dt data-summary-label="innovation">创新</dt>
               <dd class="summary-innovation"></dd>
             </div>
             <div>
-              <dt>证据</dt>
+              <dt data-summary-label="evidence">证据</dt>
               <dd class="summary-evidence"></dd>
             </div>
             <div>
-              <dt>局限</dt>
+              <dt data-summary-label="limitations">局限</dt>
               <dd class="summary-limitations"></dd>
             </div>
             <div>
-              <dt>匹配</dt>
+              <dt data-summary-label="relevance">匹配</dt>
               <dd class="summary-relevant"></dd>
             </div>
           </dl>
@@ -159,6 +167,6 @@
       </article>
     </template>
 
-    <script src="./app.js?v=20260615-date-fix"></script>
+    <script src="./app.js?v=20260617-language-switch"></script>
   </body>
 </html>
