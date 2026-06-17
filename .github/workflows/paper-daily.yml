@@ -122,6 +122,18 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: python scripts/collect_papers.py
 
+      - name: Add English summaries
+        env:
+          MAX_ENGLISH_SUMMARIES: ${{ vars.MAX_ENGLISH_SUMMARIES || '80' }}
+          ENGLISH_SUMMARY_DELAY_SECONDS: ${{ vars.ENGLISH_SUMMARY_DELAY_SECONDS || '0' }}
+          FORCE_ENGLISH_SUMMARIES: ${{ vars.FORCE_ENGLISH_SUMMARIES || 'false' }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL || secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || secrets.LLM_MODEL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: python scripts/add_english_summaries.py
+
       - name: Stage paper data cache
         run: |
           mkdir -p .paper-cache
