@@ -1,5 +1,7 @@
 const THEME_STORAGE_KEY = "paper-daily-theme";
+const LANGUAGE_STORAGE_KEY = "paper-daily-language";
 const THEMES = new Set(["dark", "light", "eye"]);
+const LANGUAGES = new Set(["zh", "en"]);
 const FUTURE_DATE_TOLERANCE_DAYS = 2;
 const JOURNAL_SOURCE_PATTERNS = [
   "nature",
@@ -10,12 +12,140 @@ const JOURNAL_SOURCE_PATTERNS = [
   "cell",
 ];
 
+const I18N = {
+  zh: {
+    loading: "正在读取数据",
+    dark: "深色",
+    light: "浅色",
+    eye: "护眼",
+    languageZh: "中文",
+    languageEn: "EN",
+    settingsTitle: "配置研究方向",
+    refreshTitle: "查看更新任务",
+    researchRadar: "Research Radar",
+    totalPapers: "总论文",
+    weekAdded: "本周新增",
+    monthAdded: "本月新增",
+    topScore: "最高匹配",
+    dailyCollection: "每日新论文",
+    conferenceCollection: "精选论文 / 期刊",
+    all: "全部",
+    daily: "当日",
+    week: "本周",
+    month: "本月",
+    highlights: "本周精选",
+    date: "日期",
+    topic: "方向",
+    match: "匹配",
+    search: "搜索",
+    searchPlaceholder: "标题、作者、关键词",
+    allTopics: "全部方向",
+    allLevels: "全部",
+    latestPapers: "最新论文",
+    allPapers: "全部论文",
+    allStoredPapers: "全部已收录论文",
+    dailyPapers: "当日论文",
+    weeklyPapers: "本周论文",
+    monthlyPapers: "月度论文",
+    paperCountSuffix: "篇",
+    published: "发布",
+    collected: "收录",
+    problem: "问题",
+    method: "方法",
+    innovation: "创新",
+    evidence: "证据",
+    limitations: "局限",
+    relevance: "匹配",
+    original: "原文",
+    pdf: "PDF",
+    downloadPdf: "下载 PDF",
+    emptyValue: "暂无",
+    emptyState: "当前筛选条件下没有论文。",
+    uncategorized: "未分类",
+    updatedAt: "更新于",
+    incremental: "增量",
+    initialization: "初始化",
+    basic: "基础",
+    dataLoadFailed: "数据读取失败",
+    fallbackSelected: "精选",
+    noAbstract: "来源没有提供足够摘要。",
+    methodFallback: "请打开论文链接查看方法细节。",
+    innovationFallback: "标题或摘要不足，无法可靠提取创新点。",
+    evidenceFallback: "证据需要在原文中核验。",
+    limitationsFallback: "缺少结构化英文摘要；英文模式下优先显示原始 abstract。",
+    relevanceFallback: "与配置方向存在文本匹配。",
+  },
+  en: {
+    loading: "Loading data",
+    dark: "Dark",
+    light: "Light",
+    eye: "Eye-care",
+    languageZh: "中文",
+    languageEn: "EN",
+    settingsTitle: "Configure research interests",
+    refreshTitle: "View update workflow",
+    researchRadar: "Research Radar",
+    totalPapers: "Total papers",
+    weekAdded: "Added this week",
+    monthAdded: "Added this month",
+    topScore: "Top match",
+    dailyCollection: "Daily papers",
+    conferenceCollection: "Selected papers / journals",
+    all: "All",
+    daily: "Today",
+    week: "This week",
+    month: "This month",
+    highlights: "Weekly highlights",
+    date: "Date",
+    topic: "Topic",
+    match: "Match",
+    search: "Search",
+    searchPlaceholder: "Title, author, keyword",
+    allTopics: "All topics",
+    allLevels: "All",
+    latestPapers: "Latest papers",
+    allPapers: "All papers",
+    allStoredPapers: "All stored papers",
+    dailyPapers: "Today’s papers",
+    weeklyPapers: "This week’s papers",
+    monthlyPapers: "Monthly papers",
+    paperCountSuffix: "papers",
+    published: "Published",
+    collected: "Collected",
+    problem: "Abstract / problem",
+    method: "Method",
+    innovation: "Innovation",
+    evidence: "Evidence",
+    limitations: "Limitations",
+    relevance: "Relevance",
+    original: "Original",
+    pdf: "PDF",
+    downloadPdf: "Download PDF",
+    emptyValue: "N/A",
+    emptyState: "No papers match the current filters.",
+    uncategorized: "Uncategorized",
+    updatedAt: "updated",
+    incremental: "incremental",
+    initialization: "initialization",
+    basic: "basic",
+    dataLoadFailed: "Failed to load data",
+    fallbackSelected: "selected",
+    noAbstract: "No sufficiently detailed abstract is available from the source.",
+    methodFallback: "Open the paper for method details.",
+    innovationFallback: "The title or abstract is insufficient for reliable innovation extraction.",
+    evidenceFallback: "Evidence should be checked in the original paper.",
+    limitationsFallback: "No structured English summary is available; English mode falls back to the original abstract.",
+    relevanceFallback: "The paper text matches the configured research interests.",
+  },
+};
+
 const state = {
   datasets: {
     daily: null,
     conference: null,
   },
   theme: "dark",
+  language: "zh",
   filters: {
     query: "",
     topic: "all",
@@ -42,10 +172,15 @@ const nodes = {
   dateFilter: document.querySelector("#dateFilter"),
   searchInput: document.querySelector("#searchInput"),
   themeOptions: document.querySelectorAll("[data-theme-option]"),
+  languageOptions: document.querySelectorAll("[data-language-option]"),
   collectionTabs: document.querySelectorAll("[data-collection]"),
   tabs: document.querySelectorAll(".tab"),
   template: document.querySelector("#paperTemplate"),
 };
+
+function t(key) {
+  return I18N[state.language]?.[key] || I18N.zh[key] || key;
+}
 
 function activeData() {
   return state.datasets[state.filters.collection] || state.datasets.daily || { papers: [], topics: [], stats: {} };
@@ -57,6 +192,15 @@ function storedTheme() {
     return THEMES.has(theme) ? theme : "dark";
   } catch {
     return "dark";
+  }
+}
+
+function storedLanguage() {
+  try {
+    const language = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    return LANGUAGES.has(language) ? language : "zh";
+  } catch {
+    return "zh";
   }
 }
 
@@ -73,6 +217,41 @@ function applyTheme(theme) {
   } catch {
     // localStorage may be blocked in privacy-focused browser modes.
   }
+}
+
+function applyLanguage(language, rerender = true) {
+  state.language = LANGUAGES.has(language) ? language : "zh";
+  document.documentElement.lang = state.language === "zh" ? "zh-CN" : "en";
+  for (const option of nodes.languageOptions) {
+    const active = option.dataset.languageOption === state.language;
+    option.classList.toggle("active", active);
+    option.setAttribute("aria-checked", String(active));
+  }
+  try {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, state.language);
+  } catch {
+    // localStorage may be blocked in privacy-focused browser modes.
+  }
+  updateStaticLabels();
+  if (rerender) {
+    hydrateTopicFilter();
+    hydrateDateFilter();
+    updateStats();
+    updateUpdatedAt();
+    render();
+  }
+}
+
+function updateStaticLabels() {
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    node.textContent = t(node.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach((node) => {
+    node.setAttribute("title", t(node.dataset.i18nTitle));
+  });
+  if (nodes.searchInput) nodes.searchInput.placeholder = t("searchPlaceholder");
+  const allLevelOption = nodes.levelFilter?.querySelector('option[value="all"]');
+  if (allLevelOption) allLevelOption.textContent = t("allLevels");
 }
 
 function parseDate(value) {
@@ -103,7 +282,8 @@ function firstNonFutureDate(...values) {
 function formatDate(value) {
   const date = parseDate(value);
   if (!date) return value ? String(value).slice(0, 10) : "-";
-  return date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" });
+  const locale = state.language === "zh" ? "zh-CN" : "en-GB";
+  return date.toLocaleDateString(locale, { year: "numeric", month: "2-digit", day: "2-digit" });
 }
 
 function dateKey(value) {
@@ -191,6 +371,10 @@ function textIncludes(paper, query) {
     paper.chinese_summary?.evidence,
     paper.chinese_summary?.limitations,
     paper.chinese_summary?.why_relevant,
+    paper.english_summary?.innovation,
+    paper.english_summary?.evidence,
+    paper.english_summary?.limitations,
+    paper.english_summary?.why_relevant,
   ]
     .join(" ")
     .toLowerCase();
@@ -263,7 +447,7 @@ function filteredPapers() {
 }
 
 function setText(parent, selector, text) {
-  parent.querySelector(selector).textContent = text || "暂无";
+  parent.querySelector(selector).textContent = text || t("emptyValue");
 }
 
 function safeFilename(paper) {
@@ -275,19 +459,41 @@ function safeFilename(paper) {
   return `${title || "paper"}.pdf`;
 }
 
+function englishSummaryFallback(paper, best) {
+  return {
+    problem: paper.summary || t("noAbstract"),
+    method: t("methodFallback"),
+    innovation: t("innovationFallback"),
+    evidence: t("evidenceFallback"),
+    limitations: t("limitationsFallback"),
+    why_relevant: best.llm_reason || best.reason || t("relevanceFallback"),
+  };
+}
+
+function paperSummary(paper, best) {
+  if (state.language === "en") {
+    const summary = paper.english_summary || {};
+    if (summary.problem || summary.method || summary.innovation || summary.evidence || summary.limitations || summary.why_relevant) {
+      return summary;
+    }
+    return englishSummaryFallback(paper, best);
+  }
+  return paper.chinese_summary || {};
+}
+
 function renderPaper(paper) {
   const node = nodes.template.content.firstElementChild.cloneNode(true);
   const best = paper.best_match || {};
-  const summary = paper.chinese_summary || {};
+  const summary = paperSummary(paper, best);
   const badge = node.querySelector(".match-badge");
   const level = levelOf(paper);
 
-  badge.textContent = `${level} ${scoreOf(paper).toFixed(2)}`;
+  badge.textContent = `${level.toUpperCase()} ${scoreOf(paper).toFixed(2)}`;
   badge.classList.add(level);
 
   const rawPublished = paper.updated || paper.published || "";
   const shownPublished = isFutureDate(rawPublished) ? paperActivityTime(paper) : rawPublished;
-  setText(node, ".paper-date", `发布 ${formatDate(shownPublished)} · 收录 ${formatDate(collectionTime(paper))}`);
+  setText(node, ".paper-date", `${t("published")} ${formatDate(shownPublished)} · ${t("collected")} ${formatDate(collectionTime(paper))}`);
   setText(node, ".paper-source", paper.source || "paper");
   setText(node, ".paper-title", paper.title);
   setText(node, ".paper-authors", (paper.authors || []).slice(0, 8).join(", "));
@@ -297,7 +503,14 @@ function renderPaper(paper) {
   setText(node, ".summary-evidence", summary.evidence);
   setText(node, ".summary-limitations", summary.limitations);
   setText(node, ".summary-relevant", summary.why_relevant);
-  setText(node, ".match-reason", `${best.topic_name || "未分类"}：${best.reason || ""}`);
+  setText(node, ".match-reason", `${best.topic_name || t("uncategorized")}：${best.reason || ""}`);
+
+  node.querySelector('[data-summary-label="problem"]').textContent = t("problem");
+  node.querySelector('[data-summary-label="method"]').textContent = t("method");
+  node.querySelector('[data-summary-label="innovation"]').textContent = t("innovation");
+  node.querySelector('[data-summary-label="evidence"]').textContent = t("evidence");
+  node.querySelector('[data-summary-label="limitations"]').textContent = t("limitations");
+  node.querySelector('[data-summary-label="relevance"]').textContent = t("relevance");
 
   const tags = node.querySelector(".paper-tags");
   for (const category of (paper.categories || []).slice(0, 8)) {
@@ -312,8 +525,11 @@ function renderPaper(paper) {
   const downloadLink = node.querySelector(".download-link");
   const pdfUrl = paper.pdf_url || paper.paper_url || "#";
   absLink.href = paper.paper_url || "#";
+  absLink.textContent = t("original");
   pdfLink.href = pdfUrl;
+  pdfLink.textContent = t("pdf");
   downloadLink.href = pdfUrl;
+  downloadLink.textContent = t("downloadPdf");
   downloadLink.setAttribute("download", safeFilename(paper));
   downloadLink.setAttribute("target", "_blank");
   downloadLink.setAttribute("rel", "noreferrer");
@@ -327,13 +543,15 @@ function viewLabels() {
   const weekEndDate = endOfWeek(date);
   weekEndDate.setDate(weekEndDate.getDate() - 1);
   const weekEnd = formatDate(weekEndDate.toISOString());
-  const monthLabel = `${date.getFullYear()} 年 ${String(date.getMonth() + 1).padStart(2, "0")} 月`;
+  const monthLabel = state.language === "zh"
+    ? `${date.getFullYear()} 年 ${String(date.getMonth() + 1).padStart(2, "0")} 月`
+    : date.toLocaleDateString("en-GB", { year: "numeric", month: "long" });
   return {
-    all: [state.filters.collection === "conference" ? "精选论文 / 期刊" : "全部论文", "全部已收录论文"],
-    daily: ["当日论文", dayLabel],
-    week: ["本周论文", `${weekStart} - ${weekEnd}`],
-    month: ["月度论文", monthLabel],
-    highlights: ["本周精选", `${weekStart} - ${weekEnd}`],
+    all: [state.filters.collection === "conference" ? t("conferenceCollection") : t("allPapers"), t("allStoredPapers")],
+    daily: [t("dailyPapers"), dayLabel],
+    week: [t("weeklyPapers"), `${weekStart} - ${weekEnd}`],
+    month: [t("monthlyPapers"), monthLabel],
+    highlights: [t("highlights"), `${weekStart} - ${weekEnd}`],
   };
 }
 
@@ -342,7 +560,7 @@ function updateHeadings(papers) {
   nodes.viewTitle.textContent = labels[0];
   nodes.listTitle.textContent = labels[0];
   nodes.scopeLabel.textContent = labels[1];
-  nodes.resultCount.textContent = `${papers.length} 篇`;
+  nodes.resultCount.textContent = state.language === "zh" ? `${papers.length} ${t("paperCountSuffix")}` : `${papers.length} ${t("paperCountSuffix")}`;
 }
 
 function render() {
@@ -353,7 +571,7 @@ function render() {
   if (!papers.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = "当前筛选条件下没有论文。";
+    empty.textContent = t("emptyState");
     nodes.paperList.appendChild(empty);
     return;
   }
@@ -368,7 +586,11 @@ function topicPaperCount(topicId) {
 }
 
 function hydrateTopicFilter() {
-  nodes.topicFilter.innerHTML = '<option value="all">全部方向</option>';
+  nodes.topicFilter.innerHTML = "";
+  const allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.textContent = t("allTopics");
+  nodes.topicFilter.appendChild(allOption);
   for (const topic of activeData().topics || []) {
     const option = document.createElement("option");
     const count = topicPaperCount(topic.id);
@@ -432,6 +654,11 @@ function bindEvents() {
       applyTheme(option.dataset.themeOption);
     });
   }
+  for (const option of nodes.languageOptions) {
+    option.addEventListener("click", () => {
+      applyLanguage(option.dataset.languageOption);
+    });
+  }
   nodes.searchInput.addEventListener("input", (event) => {
     state.filters.query = event.target.value.trim();
     render();
@@ -493,7 +720,7 @@ function asFallbackHighlightPaper(paper) {
   return {
     ...paper,
     id: `fallback-highlight:${paper.id || paper.paper_url || paper.title}`,
-    source: `${paper.source || "Paper"} · 精选`,
+    source: state.language === "zh" ? `${paper.source || "Paper"} · ${t("fallbackSelected")}` : `${paper.source || "Paper"} · ${t("fallbackSelected")}`,
     source_type: "conference",
   };
 }
@@ -531,6 +758,12 @@ function buildConferenceFallback(dailyData, conferenceData) {
   };
 }
 
+function modeLabel(mode) {
+  if (mode === "incremental") return t("incremental");
+  if (!mode || mode === "lookback") return t("initialization");
+  return mode;
+}
+
 function updateUpdatedAt(message = "") {
   if (message) {
     nodes.updatedAt.textContent = message;
@@ -538,13 +771,13 @@ function updateUpdatedAt(message = "") {
   }
   const data = activeData();
   const stats = data.stats || {};
-  const mode = stats.collection_mode === "incremental" ? "增量" : stats.collection_mode || "初始化";
-  const kind = state.filters.collection === "conference" ? "精选论文 / 期刊" : "每日新论文";
-  nodes.updatedAt.textContent = `${kind} · 更新于 ${formatDate(data.generated_at_iso)} · ${mode} · ${stats.llm_enabled ? "LLM" : "基础"}`;
+  const kind = state.filters.collection === "conference" ? t("conferenceCollection") : t("dailyCollection");
+  nodes.updatedAt.textContent = `${kind} · ${t("updatedAt")} ${formatDate(data.generated_at_iso)} · ${modeLabel(stats.collection_mode)} · ${stats.llm_enabled ? "LLM" : t("basic")}`;
 }
 
 async function main() {
   applyTheme(storedTheme());
+  applyLanguage(storedLanguage(), false);
   bindEvents();
   try {
     state.datasets.daily = await loadData();
@@ -563,7 +796,7 @@ async function main() {
       papers: [],
       stats: { llm_enabled: false },
     };
-    updateUpdatedAt(`数据读取失败：${error.message}`);
+    updateUpdatedAt(`${t("dataLoadFailed")}：${error.message}`);
   }
 
   updateUpdatedAt();
