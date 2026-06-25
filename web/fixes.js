@@ -96,7 +96,8 @@ function updateStoredPaperMetric() {
   const stats = data.stats || {};
   const configuredCap = Number(stats.max_stored_papers || 0);
   const trimmed = Number(stats.storage_trimmed_count || 0);
-  const reachedCap = trimmed > 0 || (configuredCap > 0 && papers.length >= configuredCap);
+  const knownDefaultCapReached = papers.length >= 1000 && state.filters.collection === "daily";
+  const reachedCap = trimmed > 0 || knownDefaultCapReached || (configuredCap > 0 && papers.length >= configuredCap);
 
   nodes.paperCount.textContent = reachedCap ? `${papers.length}+` : String(papers.length);
   const label = metricLabelNode(nodes.paperCount);
@@ -136,7 +137,7 @@ function normalizeTitleLatex(title) {
   return String(title || "")
     // arXiv metadata occasionally contains \ensuremath{...} without explicit
     // delimiters. MathJax expects delimiters in ordinary HTML text.
-    .replace(/\\ensuremath\s*\{([^{}]+)\}/g, "$$1$");
+    .replace(/\\ensuremath\s*\{([^{}]+)\}/g, (_match, expression) => `$${expression}$`);
 }
 
 renderPaper = function renderPaperPatched(paper) {
