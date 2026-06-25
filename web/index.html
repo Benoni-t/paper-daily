@@ -4,7 +4,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Paper Daily</title>
-    <link rel="stylesheet" href="./styles.css?v=20260617-language-switch" />
+    <link rel="stylesheet" href="./styles.css?v=20260625-data-math-fixes" />
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [["$", "$"], ["\\(", "\\)"]],
+          displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+          processEscapes: true
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+        },
+        startup: {
+          typeset: false,
+          ready: () => {
+            MathJax.startup.defaultReady();
+            window.dispatchEvent(new Event("mathjax-ready"));
+          }
+        }
+      };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   </head>
   <body>
     <header class="topbar">
@@ -167,6 +187,7 @@
       </article>
     </template>
 
-    <script src="./app.js?v=20260617-language-switch"></script>
+    <script src="./app.js?v=20260625-data-math-fixes"></script>
+    <script src="./fixes.js?v=20260625-data-math-fixes"></script>
   </body>
 </html>
